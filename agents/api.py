@@ -1,11 +1,11 @@
 """
 FastAPI REST API Server for Homomorphic Genomic Gwas Agent.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
-from .models import SystemTaskPayload, ConsensusDossier
+from .base import AuditLogger
+from .models import SystemTaskPayload
 from .supervisor import SystemSupervisor
 
 supervisor = SystemSupervisor(model_provider="mock")

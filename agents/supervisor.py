@@ -2,9 +2,10 @@
 Supervisor Orchestrator & Operations Intelligence for Homomorphic Genomic Gwas Agent.
 Domain: Post-Quantum Cryptography & Hardware Security
 """
+import math
 import uuid
 from typing import Dict, Any, List, Optional
-from .base import AuditLogger, ActionExecutor, PHIGuard
+from .base import AuditLogger, ActionExecutor, PHIGuard, SecurityException
 from .models import SystemTaskPayload, AgentAlert, ConsensusDossier, UrgencyLevel, SystemIntegrityStatus
 from .workers import InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker
 from .llm_factory import LLMFactory
@@ -21,10 +22,23 @@ class SystemSupervisor:
         self.dossier_registry: Dict[str, ConsensusDossier] = {}
 
     def process_task(self, payload: SystemTaskPayload, actor: str = "SystemSupervisor") -> ConsensusDossier:
+        # Validate numeric fields are finite (reject NaN / Inf)
+        if not math.isfinite(payload.primary_metric) or not math.isfinite(payload.secondary_metric):
+            raise ValueError("primary_metric and secondary_metric must be finite numbers (got NaN or Inf).")
+
         # Zero-PHI outbound validation
-        PHIGuard.assert_no_phi(payload.task_id)
-        PHIGuard.assert_no_phi(payload.target_identifier)
-        PHIGuard.assert_no_phi(payload.status_descriptor)
+        try:
+            PHIGuard.assert_no_phi(payload.task_id)
+            PHIGuard.assert_no_phi(payload.target_identifier)
+            PHIGuard.assert_no_phi(payload.status_descriptor)
+        except SecurityException:
+            AuditLogger.log(
+                actor=actor,
+                actor_tier="supervisor",
+                event_type="PHI_VIOLATION_BLOCKED",
+                details={"task_id": str(payload.task_id)[:60]},
+            )
+            raise
 
         # Multi-worker evaluations
         all_alerts: List[AgentAlert] = []

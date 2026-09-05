@@ -8,6 +8,8 @@ import json
 import time
 import hmac
 import hashlib
+import secrets
+import warnings
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
@@ -57,7 +59,18 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "homomorphic-genomic-gwas-agent-master-audit-key-2026")).encode("utf-8")
+        resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY")
+        if resolved_key is None:
+            resolved_key = secrets.token_hex(32)
+            warnings.warn(
+                "AUDIT_SECRET_KEY not set; generated an ephemeral key. "
+                "Set AUDIT_SECRET_KEY env var for persistent audit integrity across restarts.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        elif len(resolved_key) < 16:
+            raise ValueError("AUDIT_SECRET_KEY must be at least 16 characters for adequate HMAC strength.")
+        self.secret_key = resolved_key.encode("utf-8")
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
@@ -93,21 +106,28 @@ class AuditTrail:
         return self.logs
 
 
-GLOBAL_AUDIT = AuditTrail()
+_GLOBAL_AUDIT: Optional[AuditTrail] = None
+
+
+def _get_global_audit() -> AuditTrail:
+    global _GLOBAL_AUDIT
+    if _GLOBAL_AUDIT is None:
+        _GLOBAL_AUDIT = AuditTrail()
+    return _GLOBAL_AUDIT
 
 
 class AuditLogger:
     @staticmethod
     def log(actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
-        return GLOBAL_AUDIT.log(actor, actor_tier, event_type, details)
+        return _get_global_audit().log(actor, actor_tier, event_type, details)
 
     @staticmethod
     def get_trail() -> List[Dict[str, Any]]:
-        return GLOBAL_AUDIT.get_trail()
+        return _get_global_audit().get_trail()
 
     @staticmethod
     def verify_integrity() -> bool:
-        return GLOBAL_AUDIT.verify_integrity()
+        return _get_global_audit().verify_integrity()
 
 
 class ActionExecutor:

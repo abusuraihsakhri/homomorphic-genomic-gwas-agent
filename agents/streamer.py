@@ -2,7 +2,6 @@
 Live WebSocket Distributed Component Telemetry Streamer for homomorphic-genomic-gwas-agent.
 """
 import json
-import asyncio
 from typing import List, Dict, Any
 
 class TelemetryBroadcaster:

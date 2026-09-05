@@ -77,16 +77,22 @@ python cli.py --task-id <value> --target <value> --primary <value> --secondary <
 
 ## 🧪 Testing & Verification
 
-Run the automated test suite:
+Run the automated test suite (33 tests across 4 test modules):
 
 ```bash
 pytest -v
 ```
 
+Security-specific tests (path traversal, Prometheus sanitization, numeric validation, audit integrity):
+
+```bash
+pytest tests/test_security_and_validation.py -v
+```
+
 Execute high-throughput batch simulation benchmarks:
 
 ```bash
-python simulator.py --tasks 1000 --concurrency 8
+python simulator.py 1000
 ```
 
 ---
@@ -97,3 +103,24 @@ python simulator.py --tasks 1000 --concurrency 8
 docker build -t homomorphic-genomic-gwas-agent .
 docker run -p 8000:8000 homomorphic-genomic-gwas-agent
 ```
+
+---
+
+## 🔐 Security Hardening
+
+### Audit Key Configuration
+Set `AUDIT_SECRET_KEY` to a strong random value (at least 16 characters) in production. If unset, a random ephemeral key is generated per startup and a `RuntimeWarning` is emitted — this protects integrity for a single run but prevents cross-restart audit verification:
+
+```bash
+# Linux/macOS
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+
+# Windows (PowerShell)
+$env:AUDIT_SECRET_KEY = -join ((1..32) | ForEach-Object { Get-Random -Max 16 }).ToString("x")
+```
+
+### Hardened Controls Added
+- **Path Traversal Prevention:** The `batch` CLI command validates that input/output paths resolve inside the working directory; `../` and absolute paths are rejected with `ValueError`.
+- **Prometheus Label Sanitization:** System names passed to the Prometheus exporter are escaped (`\\`, `"`, newlines) to prevent metric-label injection.
+- **Numeric Validation:** `NaN` and `Inf` metric values are rejected by the supervisor before processing.
+- **Short Key Rejection:** `AuditTrail` raises `ValueError` if the provided key is shorter than 16 bytes.

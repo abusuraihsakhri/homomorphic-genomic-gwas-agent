@@ -4,6 +4,16 @@ Prometheus Operational Metrics Exporter for homomorphic-genomic-gwas-agent.
 import time
 from typing import Dict, Any
 
+
+def _sanitize_prometheus_label_value(value: str) -> str:
+    """Sanitize a string for safe use as a Prometheus label value.
+
+    Backslashes and double-quotes must be escaped, and newlines are
+    replaced with spaces to stay compliant with the Prometheus exposition format.
+    """
+    return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ").replace("\r", " ")
+
+
 class SystemMetricsCollector:
     def __init__(self):
         self.system_name = "homomorphic-genomic-gwas-agent"
@@ -32,7 +42,7 @@ class SystemMetricsCollector:
 
     def export_prometheus_text(self) -> str:
         avg_latency = self.processing_latency_sum / max(1, self.tasks_total)
-        sys_lbl = self.system_name
+        sys_lbl = _sanitize_prometheus_label_value(self.system_name)
         p_lines = [
             "# HELP system_tasks_total Total count of distributed component tasks processed",
             "# TYPE system_tasks_total counter",
