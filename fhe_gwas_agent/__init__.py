@@ -1,6 +1,5 @@
 """
-FHE-GWAS: Fully Homomorphic Encrypted Genome-Wide Association Study Agent
-Domain: Privacy-Preserving Federated Healthcare & FHE
-Standard: iDASH Secure Genome Analysis Standards
+Legacy threshold-audit module and separate plaintext allelic GWAS statistic.
+No fully homomorphic encryption, genomic privacy protection or iDASH compliance is implemented.
 """
 __version__ = "2.0.0-FRONTIER"
