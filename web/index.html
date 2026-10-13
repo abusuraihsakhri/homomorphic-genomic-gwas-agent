@@ -28,11 +28,11 @@
       <form id="single-form">
         <div class="table-head"><span></span><span>ALT</span><span>REF</span></div>
         <div class="count-row"><strong>Cases</strong>
-          <div><label class="sr-only" for="case-alt">Case alternate alleles</label><input id="case-alt" type="number" min="0" max="1000000000000" step="1" required value="30"></div>
-          <div><label class="sr-only" for="case-ref">Case reference alleles</label><input id="case-ref" type="number" min="0" max="1000000000000" step="1" required value="70"></div></div>
+          <div><label class="sr-only" for="case-alt">Case alternate alleles</label><input id="case-alt" type="number" min="0" max="10000000" step="1" required value="30"></div>
+          <div><label class="sr-only" for="case-ref">Case reference alleles</label><input id="case-ref" type="number" min="0" max="10000000" step="1" required value="70"></div></div>
         <div class="count-row"><strong>Controls</strong>
-          <div><label class="sr-only" for="control-alt">Control alternate alleles</label><input id="control-alt" type="number" min="0" max="1000000000000" step="1" required value="15"></div>
-          <div><label class="sr-only" for="control-ref">Control reference alleles</label><input id="control-ref" type="number" min="0" max="1000000000000" step="1" required value="85"></div></div>
+          <div><label class="sr-only" for="control-alt">Control alternate alleles</label><input id="control-alt" type="number" min="0" max="10000000" step="1" required value="15"></div>
+          <div><label class="sr-only" for="control-ref">Control reference alleles</label><input id="control-ref" type="number" min="0" max="10000000" step="1" required value="85"></div></div>
         <div class="actions"><button type="submit" class="primary">Calculate association</button><button type="button" id="reset-form" class="secondary">Reset example</button></div>
       </form>
       <div id="single-error" class="error" role="alert" hidden></div>
