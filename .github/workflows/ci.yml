@@ -30,7 +30,9 @@ jobs:
       run: python -m compileall -q agents fhe_gwas_agent cli.py enrichment.py simulator.py
 
     - name: Verify browser JavaScript syntax
-      run: node --check web/app.js
+      run: |
+        node --check web/app.js
+        node web/test.js
 
     - name: Run Pytest Suite
       run: |
