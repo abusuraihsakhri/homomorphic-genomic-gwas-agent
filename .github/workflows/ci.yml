@@ -24,7 +24,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install fastapi uvicorn pydantic pytest
+        pip install -e '.[server,dev]'
+
+    - name: Compile Python sources
+      run: python -m compileall -q agents fhe_gwas_agent cli.py enrichment.py simulator.py
+
+    - name: Verify browser JavaScript syntax
+      run: node --check web/app.js
 
     - name: Run Pytest Suite
       run: |
