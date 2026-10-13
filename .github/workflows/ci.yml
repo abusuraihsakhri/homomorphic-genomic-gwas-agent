@@ -38,11 +38,13 @@ jobs:
       run: |
         pytest -v
 
-    - name: Security SAST & Zero-PHI Audit
+    - name: Dependency consistency check
+      run: python -m pip check
+
+    - name: HMAC audit smoke check
       run: |
         python -c "
-        from agents.base import PHIGuard, AuditLogger
-        import pytest
+        from agents.base import AuditLogger
         assert AuditLogger.verify_integrity() is True
-        print('Security & Zero-PHI Audit Passed!')
+        print('Audit verification passed.')
         "
