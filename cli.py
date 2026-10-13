@@ -3,15 +3,30 @@ Command Line Interface for Homomorphic Genomic Gwas Agent.
 """
 import argparse
 import csv
+from dataclasses import asdict
 import json
 import os
 import sys
 from pathlib import Path
+from fhe_gwas_agent.gwas import allelic_chi_square
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import AuditLogger
 
 supervisor = SystemSupervisor(model_provider="mock")
+
+
+
+def _parse_bool(value) -> bool:
+    """Reject ambiguous CSV flag values (bool('false') incorrectly returns True)."""
+    if isinstance(value, bool):
+        return value
+    value = str(value).strip().lower()
+    if value in {"true", "1", "yes", "y"}:
+        return True
+    if value in {"false", "0", "no", "n", ""}:
+        return False
+    raise ValueError(f"Invalid is_critical_flag value: {value!r}")
 
 
 def _safe_resolve_path(file_path: str, must_exist: bool = False) -> Path:
@@ -55,7 +70,21 @@ def main(argv=None):
     p_serve.add_argument("--host", default="127.0.0.1")
     p_serve.add_argument("--port", type=int, default=8000)
 
+
+    p_gwas = subparsers.add_parser("gwas", help="Compute plaintext allelic chi-square (no encryption)")
+    p_gwas.add_argument("--case-alt", required=True, type=int)
+    p_gwas.add_argument("--case-ref", required=True, type=int)
+    p_gwas.add_argument("--control-alt", required=True, type=int)
+    p_gwas.add_argument("--control-ref", required=True, type=int)
+
     args = parser.parse_args(argv)
+
+    if args.command == "gwas":
+        result = allelic_chi_square(
+            args.case_alt, args.case_ref, args.control_alt, args.control_ref
+        )
+        print(json.dumps(asdict(result), indent=2))
+        return 0
 
     if args.command == "audit":
         payload = SystemTaskPayload(
@@ -109,7 +138,7 @@ def main(argv=None):
                 primary_metric=float(r.get("primary_metric", 15.0)),
                 secondary_metric=float(r.get("secondary_metric", 5.0)),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
+                is_critical_flag=_parse_bool(r.get("is_critical_flag", False)),
             )
             dossier = supervisor.process_task(payload)
             row_dict = dict(r)
