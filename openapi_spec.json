@@ -1,39 +1,92 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Homomorphic Genomic Gwas Engine API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
+    "title": "Genomic Allelic Association and Legacy Audit API",
+    "description": "Local plaintext 2×2 allelic association statistics, plus legacy generic threshold-audit demonstrations. No homomorphic encryption, genotype-level GWAS QC, or clinical certification.",
     "version": "3.0.0-ENTERPRISE",
     "contact": {
-      "name": "Dr. Abu Suraih Sakhri",
-      "url": "https://github.com/abusuraihsakhri"
+      "name": "Repository maintainer",
+      "url": "https://github.com/abusuraihsakhri/homomorphic-genomic-gwas-agent"
     }
   },
   "paths": {
     "/health": {
       "get": {
-        "summary": "Health and metadata check",
+        "summary": "Service health and metadata",
         "responses": {
           "200": {
-            "description": "System optimal"
+            "description": "Health JSON"
           }
         }
       }
     },
     "/metrics": {
       "get": {
-        "summary": "Prometheus operational metrics",
+        "summary": "JSON process counters (not Prometheus exposition text)",
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "Runtime metrics JSON"
+          }
+        }
+      }
+    },
+    "/api/gwas": {
+      "post": {
+        "summary": "Calculate plaintext 2×2 Pearson allelic chi-square and p-value",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "case_alt": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Non-negative plaintext allele count"
+                  },
+                  "case_ref": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Non-negative plaintext allele count"
+                  },
+                  "control_alt": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Non-negative plaintext allele count"
+                  },
+                  "control_ref": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Non-negative plaintext allele count"
+                  }
+                },
+                "required": [
+                  "case_alt",
+                  "case_ref",
+                  "control_alt",
+                  "control_ref"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "422": {
+            "description": "Validation error"
           }
         }
       }
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
+        "summary": "Execute legacy generic metric threshold checks (not a GWAS test)",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -49,13 +102,20 @@
                     "type": "number"
                   },
                   "secondary_metric": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 0
                   },
                   "status_descriptor": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "NOMINAL"
                   },
                   "is_critical_flag": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "default": {}
                   }
                 },
                 "required": [
@@ -69,15 +129,19 @@
         },
         "responses": {
           "200": {
-            "description": "Consensus dossier with HMAC signature"
+            "description": "Success"
+          },
+          "422": {
+            "description": "Validation error"
           }
         }
       }
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
+        "summary": "Return deterministic mock text; no LLM provider inference",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -96,19 +160,39 @@
         },
         "responses": {
           "200": {
-            "description": "Supervisory response"
+            "description": "Success"
+          },
+          "422": {
+            "description": "Validation error"
           }
         }
       }
     },
     "/api/audit/logs": {
       "get": {
-        "summary": "Retrieve and cryptographically verify HMAC audit trail",
+        "summary": "Read in-memory HMAC audit metadata (requires configured bearer token)",
+        "security": [
+          {
+            "AuditReadToken": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Cryptographic audit trail"
+            "description": "In-memory audit entries and HMAC chain verification status"
+          },
+          "403": {
+            "description": "Audit read token unset, invalid or missing"
           }
         }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AuditReadToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "AUDIT_READ_TOKEN environment variable, at least 24 characters. Endpoint rejects access when unset."
       }
     }
   }
