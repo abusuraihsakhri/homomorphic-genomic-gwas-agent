@@ -26,7 +26,7 @@
     const [a, b, c, d] = input.map(count);
     const r1 = a + b, r2 = c + d, c1 = a + c, c2 = b + d, n = r1 + r2;
     if (!(r1 && r2 && c1 && c2)) throw new Error('Both groups and both alleles must have positive totals.');
-    if (n > 1e12) throw new Error('Total allele count exceeds the 1e12 precision limit.');
+    if (n > 1e7) throw new Error('Total allele count exceeds the 10 million precision limit.');
     const determinant = a * d - b * c;
     const chi = n * determinant * determinant / (r1 * r2 * c1 * c2);
     const expected = [r1*c1/n, r1*c2/n, r2*c1/n, r2*c2/n];
