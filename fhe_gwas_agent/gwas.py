@@ -38,8 +38,8 @@ def allelic_chi_square(case_alt: int, case_ref: int,
     if not all((r1, r2, c1, c2)):
         raise ValueError("Both phenotype groups and both alleles need positive totals")
     n = r1 + r2
-    if n > 1_000_000_000_000:
-        raise ValueError("Total allele count exceeds supported precision limit")
+    if n > 10_000_000:
+        raise ValueError("Total allele count exceeds supported precision limit (10 million)")
     expected = (r1*c1/n, r1*c2/n, r2*c1/n, r2*c2/n)
     chi2 = n * (a*d - b*c)**2 / (r1*r2*c1*c2)
     p = erfc(sqrt(chi2 / 2))
