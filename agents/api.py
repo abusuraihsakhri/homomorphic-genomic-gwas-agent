@@ -2,8 +2,11 @@
 FastAPI REST API Server for Homomorphic Genomic Gwas Agent.
 """
 from typing import Dict, Any
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+import os
+import secrets
+from fastapi import FastAPI, HTTPException, Header
+from pydantic import BaseModel, Field, StrictInt
+from fhe_gwas_agent.gwas import allelic_chi_square
 from .base import AuditLogger
 from .models import SystemTaskPayload
 from .supervisor import SystemSupervisor
@@ -12,13 +15,20 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Homomorphic Genomic Gwas Agent API",
-    description="Enterprise Distributed Component Platform (Post-Quantum Cryptography & Hardware Security)",
+    description="Threshold-audit demonstration and separate plaintext allelic association calculator (no FHE)",
     version="3.0.0-ENTERPRISE",
 )
 
 
 class ChatRequest(BaseModel):
     query: str
+
+
+class GwasRequest(BaseModel):
+    case_alt: StrictInt = Field(ge=0)
+    case_ref: StrictInt = Field(ge=0)
+    control_alt: StrictInt = Field(ge=0)
+    control_ref: StrictInt = Field(ge=0)
 
 
 @app.get("/health")
@@ -33,6 +43,17 @@ def metrics():
         "audit_blocks_total": len(AuditLogger.get_trail()),
         "system_status": "NOMINAL_OPTIMAL"
     }
+
+
+@app.post("/api/gwas")
+def api_gwas(req: GwasRequest):
+    """Plaintext Pearson allelic test, not homomorphic encryption."""
+    try:
+        return allelic_chi_square(
+            req.case_alt, req.case_ref, req.control_alt, req.control_ref
+        ).to_dict()
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @app.post("/api/audit")
@@ -51,5 +72,9 @@ def api_chat(req: ChatRequest):
 
 
 @app.get("/api/audit/logs")
-def api_audit_logs():
+def api_audit_logs(authorization: str = Header(default="")):
+    """Audit metadata is unavailable without an explicitly configured bearer token."""
+    token = os.getenv("AUDIT_READ_TOKEN", "")
+    if len(token) < 24 or not secrets.compare_digest(authorization, "Bearer " + token):
+        raise HTTPException(status_code=403, detail="Audit log access disabled or unauthorized")
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
