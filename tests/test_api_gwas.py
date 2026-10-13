@@ -31,3 +31,24 @@ def test_audit_trail_requires_secret_token(monkeypatch):
     monkeypatch.setenv("AUDIT_READ_TOKEN", token)
     assert client.get("/api/audit/logs", headers={"Authorization": "Bearer wrong"}).status_code == 403
     assert client.get("/api/audit/logs", headers={"Authorization": "Bearer " + token}).status_code == 200
+
+
+def test_phi_audit_error_does_not_echo_sensitive_identifier():
+    client = TestClient(app)
+    r = client.post("/api/audit", json={
+        "task_id": "SPEC-123",
+        "target_identifier": "sample@example.org",
+        "primary_metric": 5.0
+    })
+    assert r.status_code == 400
+    assert "sample@example.org" not in r.text
+
+
+def test_non_finite_audit_metric_is_rejected():
+    client = TestClient(app)
+    r = client.post("/api/audit", json={
+        "task_id": "SPEC-123",
+        "target_identifier": "SPEC-456",
+        "primary_metric": "NaN"
+    })
+    assert r.status_code == 422
