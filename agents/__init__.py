@@ -1,7 +1,6 @@
 """
-Homomorphic Genomic Gwas Agent — Enterprise Automated Analytical Suite.
-Domain: Post-Quantum Cryptography & Hardware Security
-Standard: NIST FIPS 203/204/205 / ISO/IEC 17825 Standards
+Legacy threshold-audit demonstration helpers.
+These utilities do not implement homomorphic encryption or clinical standards.
 
 """
 __version__ = "3.0.0-ENTERPRISE"
