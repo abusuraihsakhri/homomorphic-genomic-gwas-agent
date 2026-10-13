@@ -3,6 +3,7 @@ Supervisor Orchestrator & Operations Intelligence for Homomorphic Genomic Gwas A
 Domain: Post-Quantum Cryptography & Hardware Security
 """
 import math
+import json
 import uuid
 from typing import Dict, Any, List, Optional
 from .base import AuditLogger, ActionExecutor, PHIGuard, SecurityException
@@ -31,12 +32,13 @@ class SystemSupervisor:
             PHIGuard.assert_no_phi(payload.task_id)
             PHIGuard.assert_no_phi(payload.target_identifier)
             PHIGuard.assert_no_phi(payload.status_descriptor)
+            PHIGuard.assert_no_phi(json.dumps(payload.attributes, ensure_ascii=False, default=str))
         except SecurityException:
             AuditLogger.log(
                 actor=actor,
                 actor_tier="supervisor",
                 event_type="PHI_VIOLATION_BLOCKED",
-                details={"task_id": str(payload.task_id)[:60]},
+                details={"reason": "sensitive identifier rejected"},
             )
             raise
 
