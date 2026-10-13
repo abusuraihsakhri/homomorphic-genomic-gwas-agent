@@ -3,6 +3,7 @@ Distributed Component Coordination & Executive Hierarchy for FHE-GWAS: Fully Hom
 Domain: Privacy-Preserving Federated Healthcare & FHE
 """
 import uuid
+import math
 from typing import Dict, Any, List, Optional
 from .models import FrontierPayload, AgentTelemetryAlert, ExecutionStatus
 from .engine import FrontierDomainEngine
@@ -68,6 +69,8 @@ class FHEGWASCoordinator:
         self.execution_ledger: Dict[str, Dict[str, Any]] = {}
 
     def process(self, payload: FrontierPayload) -> Dict[str, Any]:
+        if not math.isfinite(payload.primary_metric) or not math.isfinite(payload.secondary_metric):
+            raise ValueError("primary_metric and secondary_metric must be finite")
         all_alerts: List[AgentTelemetryAlert] = []
         all_alerts.extend(self.sub_1.audit(payload))
         all_alerts.extend(self.sub_2.audit(payload))
