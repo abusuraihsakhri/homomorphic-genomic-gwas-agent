@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   homomorphic-genomic-gwas-engine:
     build: .
@@ -7,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-please-override-in-production-env-file}
+      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:?Define a persistent AUDIT_SECRET_KEY before starting this service}
       - MODEL_PROVIDER=mock
     restart: unless-stopped
     healthcheck:
