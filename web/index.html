@@ -43,7 +43,7 @@
     <section class="panel" aria-labelledby="batch-title">
       <div class="section-header"><h2 id="batch-title">Batch CSV analysis</h2><span class="small">Up to 10,000 variants</span></div>
       <p class="help">Analyze a local CSV file with columns <code>variant_id,case_alt,case_ref,control_alt,control_ref</code>. Invalid rows are skipped and reported.</p>
-      <div class="actions"><label for="csv-file" class="upload-label">Choose CSV file</label><input id="csv-file" type="file" accept=".csv,text/csv" aria-label="Choose allele-count CSV"><button class="secondary" type="button" id="download-sample">Sample CSV</button></div>
+      <div class="actions"><input id="csv-file" type="file" accept=".csv,text/csv" aria-label="Choose allele-count CSV"><button class="secondary" type="button" id="download-sample">Sample CSV</button></div>
       <div id="batch-status" class="batch-status" aria-live="polite">No file selected.</div>
       <div id="batch-result" hidden>
         <div class="actions align-right"><span id="batch-count" class="small"></span><button type="button" id="export-results" class="secondary">Export results CSV</button></div>
